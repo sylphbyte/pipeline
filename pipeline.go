@@ -65,7 +65,7 @@
 //	    })
 //
 // 更多示例请参考 examples/example.go 文件。
-package pipe
+package pipeline
 
 import (
 	"time"

@@ -1,4 +1,4 @@
-package pipe
+package pipeline
 
 // GenericHandler 是一个通用的处理器函数类型别名
 // 用于简化 middleware 的函数签名
