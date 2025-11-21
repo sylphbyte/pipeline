@@ -2,8 +2,6 @@ package pipe
 
 import (
 	"time"
-
-	"github.com/sylphbyte/sylph"
 )
 
 // HookHandler Hook 处理函数
@@ -23,7 +21,7 @@ type Hook[Option any, Payload any, Result any] struct {
 
 // Execute 执行 Hook
 func (h *Hook[Option, Payload, Result]) Execute(
-	ctx sylph.Context,
+	ctx Context,
 	pipeCtx *PipeContext[Option, Payload, Result],
 ) error {
 	return h.Handler(ctx, pipeCtx)
