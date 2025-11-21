@@ -1,20 +1,18 @@
 package middleware
 
 import (
-	"app/pkg/pipe"
 	"context"
 	"fmt"
 	"time"
 
+	pipe "github.com/sylphbyte/pipeline"
 )
 
 // TimeoutFunc 超时中间件生成函数
 // 为每个 Hook 添加超时控制
-func TimeoutFunc[Option any, Payload any, Result any](timeout time.Duration) func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return func(next pipe.GenericHandler) pipe.GenericHandler {
-		return func(ctx pipe.Context, pipeCtx interface{}) error {
+func TimeoutFunc[C pipe.Context, Option any, Payload any, Result any](timeout time.Duration) pipe.Middleware[C, Option, Payload, Result] {
+	return func(next pipe.HookHandler[C, Option, Payload, Result]) pipe.HookHandler[C, Option, Payload, Result] {
+		return func(ctx C, pipeCtx *pipe.PipeContext[Option, Payload, Result]) error {
 			done := make(chan error, 1)
 
 			// 在 goroutine 中执行
@@ -37,8 +35,6 @@ func TimeoutFunc[Option any, Payload any, Result any](timeout time.Duration) fun
 }
 
 // Timeout 超时中间件（默认 30 秒）
-func Timeout[Option any, Payload any, Result any]() func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return TimeoutFunc[Option, Payload, Result](30 * time.Second)
+func Timeout[C pipe.Context, Option any, Payload any, Result any]() pipe.Middleware[C, Option, Payload, Result] {
+	return TimeoutFunc[C, Option, Payload, Result](30 * time.Second)
 }

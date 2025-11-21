@@ -1,4 +1,4 @@
-package pipeline
+package examples
 
 import (
 	"time"
@@ -7,7 +7,6 @@ import (
 )
 
 // Mock sylph.Context - 简化实现，仅用于测试
-// 实现所有必需的 sylph.Context 接口方法
 type mockContext struct{}
 
 // Context methods

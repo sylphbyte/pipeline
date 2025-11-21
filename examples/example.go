@@ -1,9 +1,9 @@
-package pipe
+package examples
 
 import (
-	"app/pkg/pipe"
 	"fmt"
 
+	pipe "github.com/sylphbyte/pipeline"
 	"github.com/sylphbyte/sylph"
 )
 
@@ -63,7 +63,7 @@ func MetadataHook(ctx sylph.Context, pipeCtx *pipe.PipeContext[ExampleOption, Ex
 // 基本使用示例
 func BasicExample(ctx sylph.Context) {
 	// 创建管道
-	pipeline := pipe.NewPipeline[ExampleOption, ExamplePayload, ExampleResult](
+	pipeline := pipe.NewPipeline[sylph.Context, ExampleOption, ExamplePayload, ExampleResult](
 		"example-pipeline",
 		func(opt *ExampleOption) {
 			opt.EnableCache = true
@@ -94,7 +94,7 @@ func MiddlewareExample(ctx sylph.Context) {
 	// 导入中间件包
 	// import "app/pkg/pipe/middleware"
 
-	pipeline := pipe.NewPipeline[ExampleOption, ExamplePayload, ExampleResult](
+	pipeline := pipe.NewPipeline[sylph.Context, ExampleOption, ExamplePayload, ExampleResult](
 		"middleware-pipeline",
 	).
 		// 使用内置中间件
@@ -116,7 +116,7 @@ func MiddlewareExample(ctx sylph.Context) {
 
 // 生命周期钩子示例
 func LifecycleExample(ctx sylph.Context) {
-	pipeline := pipe.NewPipeline[ExampleOption, ExamplePayload, ExampleResult](
+	pipeline := pipe.NewPipeline[sylph.Context, ExampleOption, ExamplePayload, ExampleResult](
 		"lifecycle-pipeline",
 	).
 		OnBeforeExecute(func(ctx sylph.Context, pipeCtx *pipe.PipeContext[ExampleOption, ExamplePayload, ExampleResult]) {
@@ -144,14 +144,14 @@ func LifecycleExample(ctx sylph.Context) {
 // 高级 Hook 配置示例
 func AdvancedHookExample(ctx sylph.Context) {
 	// 使用 Hook 构建器
-	processHook := pipe.NewHook(ProcessHook).
+	processHook := pipe.NewHook[sylph.Context, ExampleOption, ExamplePayload, ExampleResult](ProcessHook).
 		WithName("process-data").
 		WithDescription("处理用户数据").
 		// WithTimeout(5 * time.Second).
 		SkipOnError(). // 错误时跳过而非中断
 		Build()
 
-	pipeline := pipe.NewPipeline[ExampleOption, ExamplePayload, ExampleResult](
+	pipeline := pipe.NewPipeline[sylph.Context, ExampleOption, ExamplePayload, ExampleResult](
 		"advanced-pipeline",
 	).
 		AddHook(ValidateHook).

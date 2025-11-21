@@ -1,18 +1,16 @@
 package middleware
 
 import (
-	"app/pkg/pipe"
 	"fmt"
 
+	pipe "github.com/sylphbyte/pipeline"
 )
 
 // Recovery Panic 恢复中间件
 // 捕获 Hook 中的 panic（简化版，不依赖 Logger）
-func Recovery[Option any, Payload any, Result any]() func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return func(next pipe.GenericHandler) pipe.GenericHandler {
-		return func(ctx pipe.Context, pipeCtx interface{}) error {
+func Recovery[C pipe.Context, Option any, Payload any, Result any]() pipe.Middleware[C, Option, Payload, Result] {
+	return func(next pipe.HookHandler[C, Option, Payload, Result]) pipe.HookHandler[C, Option, Payload, Result] {
+		return func(ctx C, pipeCtx *pipe.PipeContext[Option, Payload, Result]) error {
 			defer func() {
 				if r := recover(); r != nil {
 					// 捕获 panic，但不做处理（仅防止程序崩溃）
@@ -29,11 +27,9 @@ func Recovery[Option any, Payload any, Result any]() func(
 }
 
 // RecoveryWithError Panic 恢复中间件（将 panic 转换为 error）
-func RecoveryWithError[Option any, Payload any, Result any]() func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return func(next pipe.GenericHandler) pipe.GenericHandler {
-		return func(ctx pipe.Context, pipeCtx interface{}) error {
+func RecoveryWithError[C pipe.Context, Option any, Payload any, Result any]() pipe.Middleware[C, Option, Payload, Result] {
+	return func(next pipe.HookHandler[C, Option, Payload, Result]) pipe.HookHandler[C, Option, Payload, Result] {
+		return func(ctx C, pipeCtx *pipe.PipeContext[Option, Payload, Result]) error {
 			var err error
 
 			defer func() {

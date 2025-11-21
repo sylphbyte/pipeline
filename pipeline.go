@@ -75,46 +75,46 @@ import (
 type OptionHandler[Option any] func(option *Option)
 
 // Pipeline 管道定义
-type Pipeline[Option any, Payload any, Result any] struct {
+type Pipeline[C Context, Option any, Payload any, Result any] struct {
 	Name   string  // 管道名称
 	option *Option // 选项数据（指针类型，与 OptionHandler 一致）
 
-	hooks       []*Hook[Option, Payload, Result]      // Hook 列表
-	middlewares []Middleware[Option, Payload, Result] // 中间件列表
+	hooks       []*Hook[C, Option, Payload, Result]      // Hook 列表
+	middlewares []Middleware[C, Option, Payload, Result] // 中间件列表
 
 	// 生命周期钩子
-	beforeExecute []func(ctx Context, pipeCtx *PipeContext[Option, Payload, Result])
-	afterExecute  []func(ctx Context, pipeCtx *PipeContext[Option, Payload, Result], err error)
-	onError       []func(ctx Context, hookName string, err error)
+	beforeExecute []func(ctx C, pipeCtx *PipeContext[Option, Payload, Result])
+	afterExecute  []func(ctx C, pipeCtx *PipeContext[Option, Payload, Result], err error)
+	onError       []func(ctx C, hookName string, err error)
 }
 
 // NewPipeline 创建新的管道
-func NewPipeline[Option any, Payload any, Result any](
+func NewPipeline[C Context, Option any, Payload any, Result any](
 	name string,
 	opts ...OptionHandler[Option],
-) *Pipeline[Option, Payload, Result] {
+) *Pipeline[C, Option, Payload, Result] {
 	option := new(Option) // 使用 new() 创建泛型类型的零值指针
 	for _, opt := range opts {
 		opt(option)
 	}
 
-	return &Pipeline[Option, Payload, Result]{
+	return &Pipeline[C, Option, Payload, Result]{
 		Name:          name,
 		option:        option,
-		hooks:         make([]*Hook[Option, Payload, Result], 0),
-		middlewares:   make([]Middleware[Option, Payload, Result], 0),
-		beforeExecute: make([]func(Context, *PipeContext[Option, Payload, Result]), 0),
-		afterExecute:  make([]func(Context, *PipeContext[Option, Payload, Result], error), 0),
-		onError:       make([]func(Context, string, error), 0),
+		hooks:         make([]*Hook[C, Option, Payload, Result], 0),
+		middlewares:   make([]Middleware[C, Option, Payload, Result], 0),
+		beforeExecute: make([]func(C, *PipeContext[Option, Payload, Result]), 0),
+		afterExecute:  make([]func(C, *PipeContext[Option, Payload, Result], error), 0),
+		onError:       make([]func(C, string, error), 0),
 	}
 }
 
 // AddHook 添加 Hook（简化版，直接使用 Handler）
-func (p *Pipeline[Option, Payload, Result]) AddHook(
-	handlers ...HookHandler[Option, Payload, Result],
-) *Pipeline[Option, Payload, Result] {
+func (p *Pipeline[C, Option, Payload, Result]) AddHook(
+	handlers ...HookHandler[C, Option, Payload, Result],
+) *Pipeline[C, Option, Payload, Result] {
 	for _, handler := range handlers {
-		hook := &Hook[Option, Payload, Result]{
+		hook := &Hook[C, Option, Payload, Result]{
 			Handler: handler,
 		}
 		p.hooks = append(p.hooks, hook)
@@ -123,11 +123,11 @@ func (p *Pipeline[Option, Payload, Result]) AddHook(
 }
 
 // AddNamedHook 添加命名的 Hook
-func (p *Pipeline[Option, Payload, Result]) AddNamedHook(
+func (p *Pipeline[C, Option, Payload, Result]) AddNamedHook(
 	name string,
-	handler HookHandler[Option, Payload, Result],
-) *Pipeline[Option, Payload, Result] {
-	hook := &Hook[Option, Payload, Result]{
+	handler HookHandler[C, Option, Payload, Result],
+) *Pipeline[C, Option, Payload, Result] {
+	hook := &Hook[C, Option, Payload, Result]{
 		Name:    name,
 		Handler: handler,
 	}
@@ -136,48 +136,48 @@ func (p *Pipeline[Option, Payload, Result]) AddNamedHook(
 }
 
 // AddHookWithOptions 添加带配置的 Hook
-func (p *Pipeline[Option, Payload, Result]) AddHookWithOptions(
-	hook *Hook[Option, Payload, Result],
-) *Pipeline[Option, Payload, Result] {
+func (p *Pipeline[C, Option, Payload, Result]) AddHookWithOptions(
+	hook *Hook[C, Option, Payload, Result],
+) *Pipeline[C, Option, Payload, Result] {
 	p.hooks = append(p.hooks, hook)
 	return p
 }
 
 // Use 使用中间件
-func (p *Pipeline[Option, Payload, Result]) Use(
-	middlewares ...Middleware[Option, Payload, Result],
-) *Pipeline[Option, Payload, Result] {
+func (p *Pipeline[C, Option, Payload, Result]) Use(
+	middlewares ...Middleware[C, Option, Payload, Result],
+) *Pipeline[C, Option, Payload, Result] {
 	p.middlewares = append(p.middlewares, middlewares...)
 	return p
 }
 
 // OnBeforeExecute 注册执行前钩子
-func (p *Pipeline[Option, Payload, Result]) OnBeforeExecute(
-	fn func(ctx Context, pipeCtx *PipeContext[Option, Payload, Result]),
-) *Pipeline[Option, Payload, Result] {
+func (p *Pipeline[C, Option, Payload, Result]) OnBeforeExecute(
+	fn func(ctx C, pipeCtx *PipeContext[Option, Payload, Result]),
+) *Pipeline[C, Option, Payload, Result] {
 	p.beforeExecute = append(p.beforeExecute, fn)
 	return p
 }
 
 // OnAfterExecute 注册执行后钩子
-func (p *Pipeline[Option, Payload, Result]) OnAfterExecute(
-	fn func(ctx Context, pipeCtx *PipeContext[Option, Payload, Result], err error),
-) *Pipeline[Option, Payload, Result] {
+func (p *Pipeline[C, Option, Payload, Result]) OnAfterExecute(
+	fn func(ctx C, pipeCtx *PipeContext[Option, Payload, Result], err error),
+) *Pipeline[C, Option, Payload, Result] {
 	p.afterExecute = append(p.afterExecute, fn)
 	return p
 }
 
 // OnError 注册错误处理钩子
-func (p *Pipeline[Option, Payload, Result]) OnError(
-	fn func(ctx Context, hookName string, err error),
-) *Pipeline[Option, Payload, Result] {
+func (p *Pipeline[C, Option, Payload, Result]) OnError(
+	fn func(ctx C, hookName string, err error),
+) *Pipeline[C, Option, Payload, Result] {
 	p.onError = append(p.onError, fn)
 	return p
 }
 
 // Execute 执行管道
-func (p *Pipeline[Option, Payload, Result]) Execute(
-	ctx Context,
+func (p *Pipeline[C, Option, Payload, Result]) Execute(
+	ctx C,
 	payload *Payload,
 ) (*Result, error) {
 	// 初始化 Result

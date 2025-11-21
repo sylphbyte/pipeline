@@ -45,7 +45,7 @@ func errorHook(ctx sylph.Context, pipeCtx *PipeContext[TestOption, TestPayload, 
 
 // TestBasicPipelineExecution 测试基本管道执行
 func TestBasicPipelineExecution(t *testing.T) {
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult](
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult](
 		"test-pipeline",
 		func(opt *TestOption) {
 			opt.EnableCache = true
@@ -91,7 +91,7 @@ func TestHookExecutionOrder(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		AddHook(hook1).
 		AddHook(hook2).
 		AddHook(hook3)
@@ -125,7 +125,7 @@ func TestAbort(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		AddHook(abortHook).
 		AddHook(shouldNotExecute)
 
@@ -166,7 +166,7 @@ func TestDataSharing(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		AddHook(setHook).
 		AddHook(getHook)
 
@@ -189,13 +189,13 @@ func TestMustGetPanic(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").AddHook(hook)
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").AddHook(hook)
 	_, _ = pipeline.Execute(newMockContext(), &TestPayload{UserID: 1})
 }
 
 // TestErrorHandling 测试错误处理
 func TestErrorHandling(t *testing.T) {
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test-pipeline").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test-pipeline").
 		AddHook(validateHook).
 		AddHook(errorHook)
 
@@ -234,7 +234,7 @@ func TestSkipOnError(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		AddHookWithOptions(errorHook).
 		AddHook(successHook)
 
@@ -252,7 +252,7 @@ func TestSkipOnError(t *testing.T) {
 func TestLifecycleHooks(t *testing.T) {
 	var lifecycle []string
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		OnBeforeExecute(func(ctx sylph.Context, pipeCtx *PipeContext[TestOption, TestPayload, TestResult]) {
 			lifecycle = append(lifecycle, "before")
 		}).
@@ -283,7 +283,7 @@ func TestOnError(t *testing.T) {
 	var errorCalled bool
 	var capturedHookName string
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		OnError(func(ctx sylph.Context, hookName string, err error) {
 			errorCalled = true
 			capturedHookName = hookName
@@ -324,7 +324,7 @@ func TestConcurrentSetGet(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").AddHook(hook)
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").AddHook(hook)
 	_, err := pipeline.Execute(newMockContext(), &TestPayload{UserID: 1})
 
 	if err != nil {
@@ -353,7 +353,7 @@ func TestConcurrentAbort(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").AddHook(hook)
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").AddHook(hook)
 	_, err := pipeline.Execute(newMockContext(), &TestPayload{UserID: 1})
 
 	if err != nil {
@@ -370,7 +370,7 @@ func TestExecutionStats(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult]("test").
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult]("test").
 		AddNamedHook("slow-hook", slowHook).
 		OnAfterExecute(func(ctx sylph.Context, pipeCtx *PipeContext[TestOption, TestPayload, TestResult], err error) {
 			stats = pipeCtx.Stats()
@@ -421,7 +421,7 @@ func TestOptionPointer(t *testing.T) {
 		return nil
 	}
 
-	pipeline := NewPipeline[TestOption, TestPayload, TestResult](
+	pipeline := NewPipeline[sylph.Context, TestOption, TestPayload, TestResult](
 		"test",
 		func(opt *TestOption) {
 			opt.EnableCache = true

@@ -1,17 +1,16 @@
 package middleware
 
 import (
-	"app/pkg/pipe"
 	"time"
+
+	pipe "github.com/sylphbyte/pipeline"
 )
 
 // Logging 日志中间件
 // 记录每个 Hook 的执行情况（简化版，不依赖 Logger）
-func Logging[Option any, Payload any, Result any]() func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return func(next pipe.GenericHandler) pipe.GenericHandler {
-		return func(ctx pipe.Context, pipeCtx interface{}) error {
+func Logging[C pipe.Context, Option any, Payload any, Result any]() pipe.Middleware[C, Option, Payload, Result] {
+	return func(next pipe.HookHandler[C, Option, Payload, Result]) pipe.HookHandler[C, Option, Payload, Result] {
+		return func(ctx C, pipeCtx *pipe.PipeContext[Option, Payload, Result]) error {
 			start := time.Now()
 
 			// 执行下一个 Handler

@@ -1,22 +1,21 @@
 package middleware
 
 import (
-	"app/pkg/pipe"
 	"fmt"
 	"time"
+
+	pipe "github.com/sylphbyte/pipeline"
 )
 
 // RetryFunc 重试中间件生成函数
 // maxRetries: 最大重试次数
 // backoff: 退避时间（每次重试会递增）
-func RetryFunc[Option any, Payload any, Result any](
+func RetryFunc[C pipe.Context, Option any, Payload any, Result any](
 	maxRetries int,
 	backoff time.Duration,
-) func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return func(next pipe.GenericHandler) pipe.GenericHandler {
-		return func(ctx pipe.Context, pipeCtx interface{}) error {
+) pipe.Middleware[C, Option, Payload, Result] {
+	return func(next pipe.HookHandler[C, Option, Payload, Result]) pipe.HookHandler[C, Option, Payload, Result] {
+		return func(ctx C, pipeCtx *pipe.PipeContext[Option, Payload, Result]) error {
 			var err error
 
 			for i := 0; i <= maxRetries; i++ {
@@ -41,8 +40,6 @@ func RetryFunc[Option any, Payload any, Result any](
 }
 
 // Retry 重试中间件（默认重试 3 次，退避 100ms）
-func Retry[Option any, Payload any, Result any]() func(
-	next pipe.GenericHandler,
-) pipe.GenericHandler {
-	return RetryFunc[Option, Payload, Result](3, 100*time.Millisecond)
+func Retry[C pipe.Context, Option any, Payload any, Result any]() pipe.Middleware[C, Option, Payload, Result] {
+	return RetryFunc[C, Option, Payload, Result](3, 100*time.Millisecond)
 }
